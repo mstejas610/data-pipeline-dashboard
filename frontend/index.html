@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revenue Dashboard</title>
+  <title>Business Analytics Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -31,7 +31,7 @@
     }
 
     .wrap {
-      max-width: 960px;
+      max-width: 1120px;
       margin: 0 auto;
       padding: 48px 20px;
     }
@@ -61,47 +61,218 @@
       width: 100%;
       max-height: 420px;
     }
+
+    .hero {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      align-items: start;
+    }
+
+    .grid-wide {
+      margin-top: 22px;
+      display: grid;
+      gap: 22px;
+      grid-template-columns: 1.25fr 0.75fr;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 1.2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.96rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(194, 65, 12, 0.12);
+      color: var(--accent);
+      font-size: 0.8rem;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metric {
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.35rem;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 860px) {
+      .grid-wide {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>Revenue Dashboard</h1>
-    <p>Monthly completed-order revenue from the processed analytics pipeline.</p>
-    <section class="panel">
-      <canvas id="chart"></canvas>
+    <section class="hero">
+      <h1>Business Analytics Dashboard</h1>
+      <p>Interactive view of revenue trends, customer value, product category performance, and regional contribution from the processed order pipeline.</p>
+    </section>
+
+    <section class="grid">
+      <section class="panel">
+        <h2>Monthly Revenue</h2>
+        <canvas id="revenueChart"></canvas>
+      </section>
+
+      <section class="panel">
+        <h2>Revenue by Category</h2>
+        <canvas id="categoryChart"></canvas>
+      </section>
+    </section>
+
+    <section class="grid-wide">
+      <section class="panel">
+        <h2>Top Customers</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Region</th>
+              <th>Total Spend</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Regional Summary</h2>
+        <div class="metric-list" id="regionsList"></div>
+      </section>
     </section>
   </main>
 
   <script>
-    fetch("http://127.0.0.1:8000/api/revenue")
-      .then((res) => res.json())
-      .then((data) => {
-        new Chart(document.getElementById("chart"), {
-          type: "line",
-          data: {
-            labels: data.map((d) => d.order_year_month),
-            datasets: [{
-              label: "Revenue",
-              data: data.map((d) => d.amount),
-              borderColor: "#c2410c",
-              backgroundColor: "rgba(194, 65, 12, 0.14)",
-              borderWidth: 3,
-              fill: true,
-              tension: 0.3
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                display: true
-              }
+    const apiBase = "http://127.0.0.1:8000/api";
+
+    function currency(value) {
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function makeChart(id, type, labels, values, label, color) {
+      return new Chart(document.getElementById(id), {
+        type,
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: `${color}22`,
+            borderWidth: 3,
+            fill: type === "line",
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true
             }
           }
-        });
+        }
+      });
+    }
+
+    function renderCustomers(rows) {
+      const table = document.getElementById("customersTable");
+      table.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${row.name}</td>
+          <td>${row.region}</td>
+          <td>${currency(row.total_spend)}</td>
+          <td><span class="pill">${row.churned ? "Churned" : "Active"}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderRegions(rows) {
+      const list = document.getElementById("regionsList");
+      list.innerHTML = rows.map((row) => `
+        <div class="metric">
+          <strong>${currency(row.amount)}</strong>
+          <div>${row.region}</div>
+        </div>
+      `).join("");
+    }
+
+    Promise.all([
+      fetch(`${apiBase}/revenue`).then((res) => res.json()),
+      fetch(`${apiBase}/categories`).then((res) => res.json()),
+      fetch(`${apiBase}/top-customers`).then((res) => res.json()),
+      fetch(`${apiBase}/regions`).then((res) => res.json())
+    ])
+      .then(([revenue, categories, customers, regions]) => {
+        makeChart(
+          "revenueChart",
+          "line",
+          revenue.map((row) => row.order_year_month),
+          revenue.map((row) => row.amount),
+          "Revenue",
+          "#c2410c"
+        );
+
+        makeChart(
+          "categoryChart",
+          "bar",
+          categories.map((row) => row.category),
+          categories.map((row) => row.amount),
+          "Category Revenue",
+          "#155e75"
+        );
+
+        renderCustomers(customers);
+        renderRegions(regions);
       })
       .catch((error) => {
-        console.error("Failed to load revenue data", error);
+        console.error("Failed to load dashboard data", error);
       });
   </script>
 </body>
