@@ -4,6 +4,8 @@ Built an end-to-end data pipeline and analytics platform that processes raw tran
 
 Designed with a focus on data reliability, modular architecture, and real-world usability.
 
+This project was designed to simulate a real-world analytics workflow where data flows from raw ingestion to actionable insights through clean pipelines and modular services.
+
 ## What It Includes
 
 - raw CSV datasets for customers, orders, and products

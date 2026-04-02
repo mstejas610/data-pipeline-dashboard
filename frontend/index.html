@@ -135,6 +135,20 @@
       margin-bottom: 4px;
     }
 
+    .status {
+      margin: 0 0 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 250, 244, 0.92);
+      color: var(--muted);
+    }
+
+    .status[data-state="error"] {
+      border-color: rgba(194, 65, 12, 0.35);
+      color: var(--accent);
+    }
+
     @media (max-width: 860px) {
       .grid-wide {
         grid-template-columns: 1fr;
@@ -148,6 +162,8 @@
       <h1>Business Analytics Dashboard</h1>
       <p>Interactive view of revenue trends, customer value, product category performance, and regional contribution from the processed order pipeline.</p>
     </section>
+
+    <div class="status" id="statusMessage" data-state="loading">Loading dashboard data...</div>
 
     <section class="grid">
       <section class="panel">
@@ -250,6 +266,8 @@
       fetch(`${apiBase}/regions`).then((res) => res.json())
     ])
       .then(([revenue, categories, customers, regions]) => {
+        document.getElementById("statusMessage").remove();
+
         makeChart(
           "revenueChart",
           "line",
@@ -272,6 +290,9 @@
         renderRegions(regions);
       })
       .catch((error) => {
+        const status = document.getElementById("statusMessage");
+        status.dataset.state = "error";
+        status.textContent = "Failed to load dashboard data. Start the backend and refresh the page.";
         console.error("Failed to load dashboard data", error);
       });
   </script>

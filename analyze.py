@@ -28,6 +28,7 @@ def main():
         how="left",
     )
 
+    # Only completed orders contribute to revenue calculations.
     completed = full_data[full_data["status"] == "completed"].copy()
 
     monthly = (

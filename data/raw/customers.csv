@@ -1,5 +1,5 @@
 customer_id,name,email,region,signup_date
-1,Tejas,mstejas610@gmail.com,South,2023-01-01
-2,Ravi,,North,01/02/2023
-2,Ravi Duplicate,ravi@email.com,North,2023-03-01
-3,Asha,asha@email,West,03-15-2023
+1,Customer One,customer.one@example.com,South,2023-01-01
+2,Customer Two,,North,01/02/2023
+2,Customer Two Updated,customer.two@example.com,North,2023-03-01
+3,Customer Three,customer.three@sample,West,03-15-2023
