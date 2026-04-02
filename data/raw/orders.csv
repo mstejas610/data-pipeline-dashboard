@@ -1,0 +1,4 @@
+order_id,customer_id,product,amount,order_date,status
+101,1,Product A,100,2023-01-10,done
+102,2,Product B,,10/02/2023,completed
+103,3,Product A,200,03-20-2023,canceled
