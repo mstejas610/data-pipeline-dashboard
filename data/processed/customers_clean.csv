@@ -1,0 +1,4 @@
+customer_id,name,email,region,signup_date,is_valid_email
+1,Tejas,mstejas610@gmail.com,South,2023-01-01,True
+2,Ravi Duplicate,ravi@email.com,North,2023-03-01,True
+3,Asha,asha@email,West,2023-03-15,False
