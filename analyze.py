@@ -38,6 +38,22 @@ def main():
     )
     monthly.to_csv(PROCESSED / "monthly_revenue.csv", index=False)
 
+    category_revenue = (
+        completed.groupby("category", dropna=False)["amount"]
+        .sum()
+        .reset_index()
+        .sort_values(by="amount", ascending=False)
+    )
+    category_revenue.to_csv(PROCESSED / "category_revenue.csv", index=False)
+
+    regional_revenue = (
+        completed.groupby("region", dropna=False)["amount"]
+        .sum()
+        .reset_index()
+        .sort_values(by="amount", ascending=False)
+    )
+    regional_revenue.to_csv(PROCESSED / "regional_revenue.csv", index=False)
+
     top_customers = (
         completed.groupby(["customer_id", "name", "region"], dropna=False)["amount"]
         .sum()

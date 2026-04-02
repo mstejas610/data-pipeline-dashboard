@@ -1,8 +1,8 @@
-from pathlib import Path
-
 import pandas as pd
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 
 BASE = Path(__file__).resolve().parent.parent
@@ -24,13 +24,29 @@ def health():
     return {"status": "ok"}
 
 
+def load_report(filename):
+    try:
+        df = pd.read_csv(PROCESSED / filename)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=f"{filename} not found") from exc
+    return df.to_dict(orient="records")
+
+
 @app.get("/api/revenue")
 def revenue():
-    df = pd.read_csv(PROCESSED / "monthly_revenue.csv")
-    return df.to_dict(orient="records")
+    return load_report("monthly_revenue.csv")
 
 
 @app.get("/api/top-customers")
 def top_customers():
-    df = pd.read_csv(PROCESSED / "top_customers.csv")
-    return df.to_dict(orient="records")
+    return load_report("top_customers.csv")
+
+
+@app.get("/api/categories")
+def categories():
+    return load_report("category_revenue.csv")
+
+
+@app.get("/api/regions")
+def regions():
+    return load_report("regional_revenue.csv")
